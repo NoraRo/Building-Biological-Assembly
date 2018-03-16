@@ -3,6 +3,7 @@
 #include<iostream>
 #include <string>
 #include <fstream>
+#include <iomanip>
 using namespace std;
 
 void lgg_crystal(vector<double>& cell,
@@ -24,3 +25,10 @@ bool is_HA(string str);
 //This function takes file handle and extracts all HAs.
 // returns list of strings of HAs and writes them on a separete file
 vector<string> extract_HAs(istream& in, string ha_file);
+//Searching for the min and max values of X, Y and Z coordinates 
+vector<double> range_XYZ(istream& in, string out_f);
+//Matrix multiplication 
+vector<double> vec_multi_matrix(vector<vector<double>> m, vector<double> vec);
+vector<vector<double>> identity_vec(int size);
+double** identity_i(int size);
+vector<vector<double>> identity_i_vec(int size);

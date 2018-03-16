@@ -178,6 +178,30 @@ double dotproduct(vector<double>& v1, vector<double>& v2)
 	return res;
 }
 
+vector<double> vec_multi_matrix(vector<vector<double>> m, vector<double> vec)
+{
+	vector<double> mult;
+	//mult.push_back(vec[0] + 17.19674);
+		for (int j = 0; j < vec.size(); j++)
+		{
+			mult.push_back(0.0);
+		}
+		
+
+	for (int i = 0; i < m.size(); i++)//col
+	{
+		for (int j = 0; j < m[0].size(); j++)//row
+		{
+			
+				mult[i] += m[i][j] * vec[j];
+			
+
+		}
+	}
+
+	return mult;
+}
+
 vector<string> extract_HAs(istream& in, string ha_file)
 {
 	vector<string> HAs;
@@ -238,3 +262,137 @@ bool is_HA(string str)
 	return false;
 }
 
+vector<double> range_XYZ(istream& in, string out_f)
+{
+	vector<double> XYZ;
+	ofstream of(out_f);
+	if (!of.is_open()) {
+		cout << "error in opeining file for reading \n";
+		return XYZ;
+	}
+
+	string line;
+	int count = 0;
+	double  Xi, min_x = 99999999, max_x = -99999999,
+			Yi, min_y = 99999999, max_y = -99999999,
+			Zi, min_z = 99999999, max_z = -99999999;
+
+	while (!in.eof())
+	{
+		++count;
+		getline(in, line);
+		if (line.size() == 0)
+			continue;
+
+		
+		string x, y , z , label = line.substr(0, 6);
+
+
+		if (label.compare("ATOM  ") == 0)
+		{
+			x = line.substr(30, 8); Xi = stod(x);
+			y = line.substr(38, 8); Yi = stod(y);
+			z = line.substr(46, 8); Zi = stod(z);
+			
+			if (min_x > Xi)
+				min_x = Xi;
+			if (min_y > Yi)
+				min_y = Yi;
+			if (min_z > Zi)
+				min_z = Zi;
+
+			if (max_x < Xi)
+				max_x = Xi;
+			if (max_y < Yi)
+				max_y = Yi;
+			if (max_z < Zi)
+				max_z = Zi;
+
+
+		}
+	}
+	XYZ.push_back(min_x);
+	XYZ.push_back(max_x);
+	XYZ.push_back(min_y);
+	XYZ.push_back(max_y);
+	XYZ.push_back(min_z);
+	XYZ.push_back(max_z);
+	of<< std::fixed;
+	of << setprecision(4);
+	of << min_x << "\t" << max_x << "\t" 
+	   << min_y << "\t" << max_y << "\t"
+	   << min_z << "\t" << max_z << endl;
+	of.close();
+
+	return XYZ;
+}
+
+vector<vector<double>> identity_vec(int size)
+{
+	vector<vector<double>> mat(size);
+	for (int i = 0; i < size; i++)
+	{
+		vector<double> m(size);
+		mat.push_back(m);
+	}
+
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			if (i == j)
+				mat[i][j] = 1;
+			else
+				mat[i][j] = 0;
+		}
+
+	}
+
+	return mat;
+}
+
+double** identity_i(int size)
+{
+	double** mat = new double*[size];
+	for (int i = 0; i < size; i++)
+	{
+		mat[i] = new double[size];
+	}
+
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			if (i == j)
+				mat[i][j] = 1;
+			else
+				mat[i][j] = 0;
+		}
+
+	}
+
+	return mat;
+}
+
+vector<vector<double>> identity_i_vec(int size)
+{
+	vector<vector<double>> mat;
+	for (int i = 0; i < size; i++)
+	{
+		mat.push_back(vector<double>(size));
+	}
+
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			if (i == j)
+				mat[i][j] = 1;
+			else
+				mat[i][j] = 0;
+		}
+
+	}
+
+	return mat;
+}
