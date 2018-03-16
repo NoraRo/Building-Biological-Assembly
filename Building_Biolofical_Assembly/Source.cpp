@@ -1101,9 +1101,11 @@ void body0()
 
 	string originalPath = path + mid_f;
 	string newPath = path + new_f;
-
+	vector<vector<int>> repo;
+	vector<string> viruses;
 	for (auto& file : fs::directory_iterator(originalPath))
 	{
+		vector<int> r;
 		cout << file << endl;
 		if (fs::path(file).extension() != fs::path(".pdb").extension())
 			continue;
@@ -1116,33 +1118,38 @@ void body0()
 		}
 		virus = fs::path(file).stem().u8string() + ".pdb";
 		vector<double**> list_SYM = read_smtry_records(rf);
-		
+		vector<double**> list_MTRIX = read_MTRIX_records(rf);
 		rf.close();
 
-		ifstream dd(file);
-		if (!dd.is_open()) {
-			cout << file << " error in opening file for reading \n";
-			return;
-		}
-		virus = fs::path(file).stem().u8string() + ".pdb";
-		vector<double**> list_MTRIX = read_MTRIX_records(dd);
+		int total = 0;
+		if (list_MTRIX.size() == 0)
+			total = list_SYM.size();
+		else if (list_SYM.size() == 0)
+			total = list_MTRIX.size();
+		else total = list_MTRIX.size() * list_SYM.size();
 
-		dd.close();
-
-
-		//rewrite_biomits(originalPath, newPath, virus, "edited_biomits", list_MTRIX, 60);
-		ofstream of(newPath + "report MTRIXandSYM.csv", ios::app);
-		if (!of.is_open()) {
-			cout << file << " error in opening file for reading \n";
-			return;
-		}
-		of << setw(10) << virus << "," << setw(4) << list_MTRIX.size()
-			<< "," << setw(4) << list_SYM.size() << endl;
-
-		of.close();
-
-
+		viruses.push_back(virus);
+		r.push_back(list_MTRIX.size());
+		r.push_back(list_SYM.size());
+		r.push_back(total);
+		repo.push_back(r);
 	}
+
+	string file = "report MTRIXandSYM.csv";
+	ofstream of(newPath + file);
+	if (!of.is_open()) {
+		cout << file << " error in opening file for reading \n";
+		return;
+	}
+	of << setw(10) << "VIRUS" << "," << setw(6) << "MTRIX" << ","
+		<< setw(4) << "SYM" << "," << setw(5) << "TOTAL" << endl;
+	for (int i = 0; i < viruses.size(); i++)
+	{
+		of << setw(10) << viruses[i] << "," << setw(6) << repo[i][0]
+			<< "," << setw(4) << repo[i][1] << ","
+			<< setw(5) << repo[i][2] << endl;
+	}
+	of.close();
 }
 
 //writing MTRIX as BIOMITs
@@ -1840,8 +1847,8 @@ int main()
 	//preprocessing_input();
 	//extract_ranges();
 	//body();
-	//body0();
-	body12_2();
+	body0();
+	//body12_2();
 	//system("pause");
 	return 0;
 }
