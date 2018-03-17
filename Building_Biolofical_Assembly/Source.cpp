@@ -528,6 +528,7 @@ void writing_ATOMS_only(ostream&of, vector<vector<double>> new_ATOMs,
 }
 //This function extract rotation from ncs.ofm file
 //That is the output of FINDNCS program
+//one based
 vector<vector<double>> read_ROTATION_records(ifstream & rf, int ncs_number)
 {
 	const string label = ".LSQ_RT_NCS" + to_string(ncs_number);
@@ -1613,6 +1614,7 @@ void body12() {
 }
 
 //Calculating W - common NCS  and generating the whole capsid
+// multiplying W2 * W * W*W 
 void body12_1() {
 
 	string name_f = "E:/New Matrices/Archive pdb/", virus = "pdb1bev.pdb";
@@ -1698,6 +1700,8 @@ void body12_1() {
 }
 
 //Calculating W - common NCS  and generating the whole capsid
+//This function is equivlant to the previous one but more effecient
+//Multiplying W2 to the star 
 void body12_2() {
 
 	string name_f = "E:/New Matrices/Archive pdb/", virus = "pdb1bev.pdb";
@@ -1757,17 +1761,11 @@ void body12_2() {
 		vector<vector<double>> new_ATOMs;
 		for (int i = 0; i < list_ATOMs.size(); i++)
 		{
-			new_ATOMs.push_back(vec_multi_matrix(W, A_ATOM[i]));
-		}
-		//For printing - Its real position
-		vector<vector<double>> new_ATOMs_print;
-		for (int i = 0; i < new_ATOMs.size(); i++)
-		{
-			auto g = vec_multi_matrix(W, new_ATOMs[i]);
-			new_ATOMs_print.push_back(g);
+			auto g = vec_multi_matrix(W, A_ATOM[i]);
+			new_ATOMs.push_back(g);
 			star_ATOMs.push_back(g);
-			star_lables.push_back(lables[i]);
 		}
+		
 		//Multiplying just to write them in the file
 		vector<vector<double>> new_Rot = multi_vec(W, A);
 		vector<vector<double>> new_Rot_print = multi_vec(W, new_Rot);
@@ -1775,7 +1773,7 @@ void body12_2() {
 		name_f = "E:/New Matrices/NCS vs MTRIX/";
 		string ncsORmtrix = "W_matrix_" + to_string( 0) + "_";
 		string writing_f = name_f + "new_" + ncsORmtrix + to_string(i + 1) + "_" + virus;
-		write_atoms_tofile(writing_f, new_ATOMs_print, lables, new_Rot_print);
+		write_atoms_tofile(writing_f, new_ATOMs, lables, new_Rot_print);
 		//Replace the old matrix with the new one
 		A_ATOM = new_ATOMs;
 		A = new_Rot;
@@ -1827,7 +1825,145 @@ void body12_2() {
 
 }
 
+//Creating Star only using W
+void  body12_3(int L) {
 
+	string name_f = "E:/New Matrices/Archive pdb/", virus = "pdb1e57.pdb";
+	ifstream rf(name_f + virus);
+	if (!rf.is_open()) {
+		cout << "error in opeining file for reading \n";
+		return ;
+	}
+
+	//vector<vector<vector<double>>> SYM = read_smtry_records_vec(rf);
+	vector<vector<string>> lables;
+	vector<vector<double>> list_ATOMs = read_ATOM_records(rf, lables);
+	rf.close();
+
+	ifstream rf1(name_f + virus);
+	if (!rf1.is_open()) {
+		cout << "error in opeining file for reading \n";
+		return;
+	}
+	vector<vector<vector<double>>> MTRIX = read_BIOMT_records_vec(rf1);
+	rf1.close();
+	//Initialize the fixed W which is C*A^-1
+	vector<vector<double>> W = MTRIX[L];
+	vector<vector<double>> A = identity_i_vec(4);//MTRIX[0];
+
+	////This step is useless if A is identity
+	vector<vector<double>> A_ATOM = list_ATOMs;
+	//for (int i = 0; i < list_ATOMs.size(); i++)
+	//{
+	//	A_ATOM.push_back(vec_multi_matrix(A, list_ATOMs[i]));
+	//}
+
+	//name_f = "E:/New Matrices/NCS vs MTRIX/";
+	//string ncsORmtrix = "W_matrix_0_";
+	//string writing_f = name_f + "new_" + ncsORmtrix + to_string(0) + "_" + virus;
+
+	//write_atoms_tofile(writing_f, A_ATOM, lables, A);
+
+	//Creating the star look
+	vector<vector<double>> star_ATOMs;
+	vector<vector<string>> star_lables;
+	for (int i = 0; i < 5; i++)
+	{
+
+		vector<vector<double>> new_ATOMs;
+		for (int i = 0; i < list_ATOMs.size(); i++)
+		{
+			auto g = vec_multi_matrix(W, A_ATOM[i]);
+			new_ATOMs.push_back(g);
+			star_ATOMs.push_back(g);
+		}
+
+		//Multiplying just to write them in the file
+		vector<vector<double>> new_Rot = multi_vec(W, A);
+		vector<vector<double>> new_Rot_print = multi_vec(W, new_Rot);
+		//Writing to file
+		name_f = "E:/New Matrices/NCS vs MTRIX/";
+		string ncsORmtrix = "W_matrix_" + to_string(L) + "_";
+		string writing_f = name_f + "new_" + ncsORmtrix + to_string(i + 1) + "_" + virus;
+		write_atoms_tofile(writing_f, new_ATOMs, lables, new_Rot_print);
+		//Replace the old matrix with the new one
+		A_ATOM = new_ATOMs;
+		A = new_Rot;
+	}
+
+	//return star_ATOMs;
+}
+
+// Creating Star only using ncs from ncs.ofm
+//one based
+void  body12_4(int L) {
+
+	string name_f = "E:/New Matrices/Archive pdb/", virus = "pdb1bev.pdb";
+	ifstream rf(name_f + virus);
+	if (!rf.is_open()) {
+		cout << "error in opeining file for reading \n";
+		return;
+	}
+
+	//vector<vector<vector<double>>> SYM = read_smtry_records_vec(rf);
+	vector<vector<string>> lables;
+	vector<vector<double>> list_ATOMs = read_ATOM_records(rf, lables);
+	rf.close();
+	
+	name_f = "E:\\New Matrices\\Fortran\\out\\", virus = "ncs.ofm";
+	ifstream rf1(name_f + virus);
+	if (!rf1.is_open()) {
+		cout << "error in opeining file for reading \n";
+		return;
+	}
+	vector<vector<double>> MTRIX = read_ROTATION_records(rf1, L);
+	rf1.close();
+	//Initialize the fixed W which is C*A^-1
+	vector<vector<double>> W = MTRIX;
+	vector<vector<double>> A = identity_i_vec(4);//MTRIX[0];
+
+												 ////This step is useless if A is identity
+	vector<vector<double>> A_ATOM = list_ATOMs;
+	//for (int i = 0; i < list_ATOMs.size(); i++)
+	//{
+	//	A_ATOM.push_back(vec_multi_matrix(A, list_ATOMs[i]));
+	//}
+
+	//name_f = "E:/New Matrices/NCS vs MTRIX/";
+	//string ncsORmtrix = "W_matrix_0_";
+	//string writing_f = name_f + "new_" + ncsORmtrix + to_string(0) + "_" + virus;
+
+	//write_atoms_tofile(writing_f, A_ATOM, lables, A);
+
+	//Creating the star look
+	vector<vector<double>> star_ATOMs;
+	vector<vector<string>> star_lables;
+	for (int i = 0; i < 5; i++)
+	{
+
+		vector<vector<double>> new_ATOMs;
+		for (int i = 0; i < list_ATOMs.size(); i++)
+		{
+			auto g = vec_multi_matrix(W, A_ATOM[i]);
+			new_ATOMs.push_back(g);
+			star_ATOMs.push_back(g);
+		}
+
+		//Multiplying just to write them in the file
+		vector<vector<double>> new_Rot = multi_vec(W, A);
+		vector<vector<double>> new_Rot_print = multi_vec(W, new_Rot);
+		//Writing to file
+		name_f = "E:/New Matrices/NCS vs MTRIX/";
+		string ncsORmtrix = "ncs_matrix_" + to_string(L) + "_";
+		string writing_f = name_f + "new_" + ncsORmtrix + to_string(i + 1) + "_.pdb";
+		write_atoms_tofile(writing_f, new_ATOMs, lables, new_Rot_print);
+		//Replace the old matrix with the new one
+		A_ATOM = new_ATOMs;
+		A = new_Rot;
+	}
+
+	//return star_ATOMs;
+}
 int main()
 {
 	//edit_file();
@@ -1847,8 +1983,12 @@ int main()
 	//preprocessing_input();
 	//extract_ranges();
 	//body();
-	body0();
+	//body0();
 	//body12_2();
+	for (size_t i = 1; i <= 10; i++)
+	{
+		body12_4(i);
+	}
 	//system("pause");
 	return 0;
 }
